@@ -35,25 +35,18 @@ function twodigit(n){
     access_token_key: token['access_token_key'],
     access_token_secret: token['access_token_secret']
   });
-
-  var stream = client.stream('statuses/filter', {track: '#WEsold100kAlbums'});
+  var stream = client.stream('statuses/filter', {track: '#tradewar'});
   stream.on('data', function(event) {
     var time = new Date()
     var timestr = `${twodigit(time.getDate())}/${twodigit(time.getMonth()+1)} ${twodigit(time.getHours())}:00`
     console.log(`${timestr} ${event.text}`)
-
-    // var timestr = `${Math.floor(Math.random() * 4) + 13}:00`
-    var i = findTime(timestr)
-    if(i === -1) {
-      tradewar.push(0);
-      times.push(timestr);
-    } else {
-      tradewar[i] = tradewar[i] + 1
-    }
+    update(timestr, 1)
   });
   stream.on('error', function(error) {
     throw error
   });
+
+  get()
 
 })()
 
@@ -103,6 +96,7 @@ app.get('/', (req, res) => {
     }
 </style>
 <body>
+    <h1>#tradewar Data Analysis</h1>
     <div class="container">
         <canvas id="myChart"></canvas>
     </div>
@@ -207,20 +201,6 @@ async function update(t, n) {
   await datastore.save(task);
 }
 
-// function fn60sec() {
-//   if (tradewar.length != 0) {
-//     for(var i=0; i<times.length; i++) {
-//       if(tradewar[i] != 0) {
-//         update(t, n)
-//       }
-//     }
-//     tradewar = []
-//     times = []
-//   }
-// }
-// fn60sec();
-setInterval(fn60sec, 60*1000);
-
 async function get() {
 // Your Google Cloud Platform project ID
   const projectId = 'wsp-final';
@@ -229,14 +209,23 @@ async function get() {
   const datastore = new Datastore({
     projectId: projectId,
   });
-  var apiMap = {}
   const query = datastore.createQuery('Tradewar');
   const [tasks] = await datastore.runQuery(query);
   tasks.forEach(task => {
     const taskKey = task[datastore.KEY];
-    apiMap[taskKey.name] = task.description
+    // apiMap[taskKey.name] = task.description
+    // var timestr = `${Math.floor(Math.random() * 4) + 13}:00`
+    var i = findTime(taskKey.name)
+    if(i === -1) {
+      tradewar.push(Number(task.description));
+      times.push(taskKey.name);
+    } else {
+      tradewar[i] = Number(task.description)
+    }
   });
 
-  dbmap = apiMap
+  console.log('=>', times, tradewar)
 }
+
+setInterval(get, 15* 1000)
 
