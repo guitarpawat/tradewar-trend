@@ -207,18 +207,18 @@ async function update(t, n) {
   await datastore.save(task);
 }
 
-function fn60sec() {
-  if (tradewar.length != 0) {
-    for(var i=0; i<times.length; i++) {
-      if(tradewar[i] != 0) {
-        update(t, n)
-      }
-    }
-    tradewar = []
-    times = []
-  }
-}
-fn60sec();
+// function fn60sec() {
+//   if (tradewar.length != 0) {
+//     for(var i=0; i<times.length; i++) {
+//       if(tradewar[i] != 0) {
+//         update(t, n)
+//       }
+//     }
+//     tradewar = []
+//     times = []
+//   }
+// }
+// fn60sec();
 setInterval(fn60sec, 60*1000);
 
 async function get() {
