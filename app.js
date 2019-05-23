@@ -27,6 +27,8 @@ function twodigit(n){
   return n > 9 ? "" + n: "0" + n;
 }
 
+const TIMEZONE = 25200000;
+
 (async () => {
   let token = await getTwitterAPIKey()
   var client = new Twitter({
@@ -38,6 +40,9 @@ function twodigit(n){
   var stream = client.stream('statuses/filter', {track: '#tradewar'});
   stream.on('data', function(event) {
     var time = new Date()
+    if(time.getTimezoneOffset() == 0) {
+        time = new Date(time.getTime() + TIMEZONE)
+    }
     var timestr = `${twodigit(time.getDate())}/${twodigit(time.getMonth()+1)} ${twodigit(time.getHours())}:00`
     console.log(`${timestr} ${event.text}`)
     update(timestr, 1)
