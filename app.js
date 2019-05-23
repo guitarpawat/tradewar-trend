@@ -18,10 +18,15 @@
 // [START gae_node_request_example]
 const express = require('express');
 var Twitter = require('twitter');
+var cors = require('cors');
 // Imports the Google Cloud client library
 const {Datastore} = require('@google-cloud/datastore');
 
 const app = express();
+
+app.use(cors());
+
+var apiRes = {}
 
 function twodigit(n){
   return n > 9 ? "" + n: "0" + n;
@@ -81,6 +86,8 @@ function strtime() {
   return str
 }
 
+const UPDATE = '`Last update on ${twodigit(time.getHours())}:${twodigit(time.getMinutes())}:${twodigit(time.getSeconds())}`'
+
 app.get('/', (req, res) => {
   res
     .status(200)
@@ -96,8 +103,8 @@ app.get('/', (req, res) => {
 </head>
 <style>
     .container {
-        width: 75%;
-        height: 75%;
+        width: 70%;
+        height: 70%;
     }
 </style>
 <body>
@@ -105,12 +112,17 @@ app.get('/', (req, res) => {
     <div class="container">
         <canvas id="myChart"></canvas>
     </div>
+    <p id="update">Loading</p>
 
 </body>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-<script>function renderChart(data, labels) {
+<script>
+function twodigit(n){
+  return n > 9 ? "" + n: "0" + n;
+}
+function renderChart(data, labels) {
     var ctx = document.getElementById("myChart").getContext('2d');
     var myChart = new Chart(ctx, {
         type: 'line',
@@ -125,10 +137,25 @@ app.get('/', (req, res) => {
 }
 
 
-data = [${tradewar}];
-labels =  ${strtime()};
-renderChart(data, labels);
+// data = [${tradewar}];
+// labels =  ${strtime()};
+// renderChart(data, labels);
 
+  function apiGet() {
+    Http = new XMLHttpRequest();
+    url='https://wsp-final.appspot.com/api';
+    Http.open("GET", url);
+    Http.send();
+    Http.onreadystatechange=()=>{
+      var apiobj = JSON.parse(Http.responseText)
+      document.getElementById('myChart').innerHTML = ''
+      renderChart(apiobj['data'], apiobj['label'])
+      var time = new Date()
+      document.getElementById('update').innerHTML = ${UPDATE}
+    }
+  }
+apiGet()
+setInterval(apiGet, 20 * 1000)
 </script>
 
 </html>
@@ -136,7 +163,11 @@ renderChart(data, labels);
     .end();
 });
 
-
+app.get('/api', (req, res) => {
+    res.status(200)
+        .send(apiRes)
+        .end()
+})
 
 // Start the server
 const PORT = process.env.PORT || 8080;
@@ -230,6 +261,8 @@ async function get() {
   });
 
   console.log('=>', times, tradewar)
+  let apiobj = {data: tradewar, label: times}
+  apiRes = JSON.stringify(apiobj)
 }
 
 setInterval(get, 15* 1000)
